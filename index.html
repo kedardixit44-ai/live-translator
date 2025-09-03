@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Translator by KD</title>
+  <title>Walkie-Talkie by KD</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: "Segoe UI", sans-serif;
+      font-family: "Segoe UI", Tahoma, sans-serif;
       background: linear-gradient(135deg, #667eea, #764ba2);
       color: #fff;
-      height: 100vh; display: flex; justify-content: center; align-items: center;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       padding: 15px;
     }
     .container {
@@ -18,88 +20,75 @@
       backdrop-filter: blur(15px);
       border-radius: 25px;
       padding: 25px;
-      width: 100%; max-width: 450px;
+      width: 100%;
+      max-width: 420px;
       text-align: center;
       box-shadow: 0 8px 25px rgba(0,0,0,0.35);
-      animation: fadeIn 0.8s ease-in-out;
     }
-    h2 { margin-bottom: 8px; font-size: 22px; font-weight: bold; }
-    p { font-size: 14px; margin-bottom: 18px; color: #ddd; }
-    input, select {
-      padding: 12px; border-radius: 15px; border: none; outline: none;
-      margin: 10px 0; font-size: 16px; width: 100%; background: #fff; color: #333;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    h2 { margin-bottom: 8px; }
+    input, button {
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      margin: 8px 0;
+      width: 100%;
+      font-size: 16px;
     }
     button {
-      background: linear-gradient(90deg, #ff7eb3, #ff758c);
-      border: none; padding: 14px; border-radius: 25px; color: white;
-      font-size: 16px; font-weight: bold; cursor: pointer;
-      transition: 0.3s; margin-top: 10px; width: 100%;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      background: linear-gradient(90deg,#ff7eb3,#ff758c);
+      color: #fff;
+      cursor: pointer;
+      transition: 0.3s;
     }
-    button:hover { background: linear-gradient(90deg, #ff4d8c, #ff0066); transform: scale(1.05); }
-    #output {
-      margin-top: 15px; font-size: 18px; font-weight: 500; color: #fff;
-      background: rgba(0,0,0,0.25); padding: 14px; border-radius: 15px;
-      min-height: 55px;
+    button:hover { transform: scale(1.05); }
+    #speakBtn {
+      background: linear-gradient(90deg,#00c6ff,#0072ff);
+      font-weight: bold;
     }
     #chatHistory {
-      margin-top: 15px; max-height: 200px; overflow-y: auto;
-      background: rgba(0,0,0,0.25); border-radius: 12px;
-      padding: 10px; text-align: left; font-size: 14px;
+      margin-top: 15px;
+      text-align: left;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 10px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 12px;
     }
-    #chatHistory p { margin: 5px 0; padding: 6px 10px; border-radius: 8px; }
-    #chatHistory .me { background: rgba(0,255,128,0.2); }
-    #chatHistory .other { background: rgba(255,255,255,0.15); }
-    #chatHistory strong { color: gold; }
-    #chatHistory .system {
-      color: #ffd700; font-style: italic; text-align: center;
-      background: transparent; padding: 4px;
+    #chatHistory p {
+      margin: 6px 0;
+      padding: 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
     }
+    .system { color: #ffd700; font-style: italic; }
     .footer { margin-top: 15px; font-size: 12px; color: #ccc; }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>🎧 Live Translator</h2>
+    <h2>🎧 Walkie-Talkie</h2>
     <p>Developed by <b>KD</b> (@kdr.dxt_02)</p>
 
-    <input type="text" id="nameInput" placeholder="Enter your name">
-    <input type="text" id="roomInput" placeholder="Enter room code">
+    <input id="nameInput" placeholder="Enter your name">
+    <input id="roomInput" placeholder="Enter room code">
 
     <button id="joinBtn" onclick="joinRoom()">Join Room</button>
-    <button id="leaveBtn" onclick="leaveRoom()" style="display:none;">Leave Room</button>
+    <button id="leaveBtn" onclick="leaveRoom()" style="display:none;background:#ff4d4d;">Leave Room</button>
+    <button id="speakBtn" style="display:none;"
+      onmousedown="startRec()" onmouseup="stopRec()"
+      ontouchstart="startRec()" ontouchend="stopRec()">
+      🎤 Hold to Talk
+    </button>
 
-    <label for="lang">Choose your language:</label>
-    <select id="lang">
-      <option value="en">English</option>
-      <option value="hi">Hindi</option>
-      <option value="mr">Marathi</option>
-      <option value="bn">Bengali</option>
-      <option value="ta">Tamil</option>
-      <option value="te">Telugu</option>
-      <option value="kn">Kannada</option>
-      <option value="ml">Malayalam</option>
-      <option value="gu">Gujarati</option>
-      <option value="pa">Punjabi</option>
-      <option value="ur">Urdu</option>
-      <option value="or">Odia</option>
-      <option value="as">Assamese</option>
-    </select>
-
-    <button onclick="startRec()">🎤 Speak</button>
-    <button onclick="toggleMembers()">👥 Peoples</button>
-
-    <p id="output"></p>
     <div id="chatHistory"></div>
-    <div id="membersList" style="display:none; margin-top:10px; font-size:14px;"></div>
-
-    <div class="footer">✨ Powered by LibreTranslate & Firebase ✨</div>
+    <div class="footer">✨ Powered by Firebase ✨</div>
   </div>
 
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+
   <script>
     // ===== FIREBASE CONFIG =====
     const firebaseConfig = {
@@ -107,15 +96,18 @@
       authDomain: "live-earbuds.firebaseapp.com",
       databaseURL: "https://live-earbuds-default-rtdb.asia-southeast1.firebasedatabase.app/",
       projectId: "live-earbuds",
-      storageBucket: "live-earbuds.firebasestorage.app",
+      storageBucket: "live-earbuds.appspot.com",
       messagingSenderId: "1026828944019",
       appId: "1:1026828944019:web:ee739271101b14db4e4366"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const storage = firebase.storage();
 
     let userName = "";
     let roomId = "";
+    let mediaRecorder;
+    let audioChunks = [];
 
     // ===== JOIN ROOM =====
     function joinRoom() {
@@ -125,7 +117,6 @@
 
       db.ref("rooms/" + roomId + "/members/" + userName).set(true);
 
-      // Push system message
       db.ref("rooms/" + roomId + "/messages").push({
         sender: "SYSTEM",
         text: `⚡ ${userName} joined the room`,
@@ -134,16 +125,15 @@
 
       document.getElementById("joinBtn").style.display = "none";
       document.getElementById("leaveBtn").style.display = "block";
+      document.getElementById("speakBtn").style.display = "block";
 
-      // Listen to messages
+      // Listen for messages
       db.ref("rooms/" + roomId + "/messages").on("child_added", snapshot => {
         const msg = snapshot.val();
         if (msg.sender === "SYSTEM") {
           addSystemMessage(msg.text);
         } else if (msg.sender !== userName) {
-          translateAndSpeak(msg.text, msg.sender);
-        } else {
-          addToChat(msg.sender + " (You)", msg.text, true);
+          autoPlayAudio(msg.sender, msg.audioURL);
         }
       });
     }
@@ -161,64 +151,47 @@
 
       document.getElementById("joinBtn").style.display = "block";
       document.getElementById("leaveBtn").style.display = "none";
+      document.getElementById("speakBtn").style.display = "none";
       document.getElementById("chatHistory").innerHTML = "";
-      document.getElementById("membersList").style.display = "none";
 
       db.ref("rooms/" + roomId + "/messages").off();
       userName = ""; roomId = "";
     }
 
-    // ===== SPEECH RECOGNITION =====
-    function startRec() {
-      let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = "en-IN";
-      recognition.start();
+    // ===== RECORD AUDIO =====
+    async function startRec() {
+      if (!navigator.mediaDevices.getUserMedia) {
+        alert("Mic not supported in this browser");
+        return;
+      }
 
-      recognition.onresult = function(event) {
-        let text = event.results[0][0].transcript;
-        document.getElementById("output").innerText = "You said: " + text;
-        sendMessage(text);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => { audioChunks.push(e.data); };
+      mediaRecorder.start();
+    }
+
+    async function stopRec() {
+      if (!mediaRecorder || mediaRecorder.state === "inactive") return;
+      mediaRecorder.stop();
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const fileRef = storage.ref(roomId + "/" + Date.now() + ".webm");
+        await fileRef.put(blob);
+        const url = await fileRef.getDownloadURL();
+
+        db.ref("rooms/" + roomId + "/messages").push({
+          sender: userName,
+          audioURL: url,
+          timestamp: Date.now()
+        });
       };
     }
 
-    // ===== SEND MESSAGE =====
-    function sendMessage(text) {
-      if (!roomId) { alert("Join a room first!"); return; }
-      db.ref("rooms/" + roomId + "/messages").push({
-        sender: userName,
-        text: text,
-        timestamp: Date.now()
-      });
-    }
-
-    // ===== TRANSLATE & SPEAK =====
-    function translateAndSpeak(originalText, sender) {
-      let targetLang = document.getElementById("lang").value;
-      fetch("https://libretranslate.de/translate", {
-        method: "POST",
-        body: JSON.stringify({ q: originalText, source: "auto", target: targetLang, format: "text" }),
-        headers: { "Content-Type": "application/json" }
-      })
-      .then(res => res.json())
-      .then(data => {
-        let translated = data.translatedText;
-        document.getElementById("output").innerText =
-          sender + ": " + translated;
-        speak(translated, targetLang);
-        addToChat(sender, translated, false);
-      });
-    }
-
-    // ===== CHAT HISTORY =====
-    function addToChat(sender, message, isMe) {
-      let chatBox = document.getElementById("chatHistory");
-      let p = document.createElement("p");
-      p.className = isMe ? "me" : "other";
-      p.innerHTML = `<strong>${sender}:</strong> ${message}`;
-      chatBox.appendChild(p);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
+    // ===== UI HELPERS =====
     function addSystemMessage(text) {
       let chatBox = document.getElementById("chatHistory");
       let p = document.createElement("p");
@@ -228,34 +201,23 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // ===== SPEAK TRANSLATION =====
-    function speak(text, langCode) {
-      let utterance = new SpeechSynthesisUtterance(text);
-      let map = {
-        en: "en-IN", hi: "hi-IN", mr: "mr-IN", bn: "bn-IN",
-        ta: "ta-IN", te: "te-IN", kn: "kn-IN", ml: "ml-IN",
-        gu: "gu-IN", pa: "pa-IN", ur: "ur-IN", or: "or-IN", as: "as-IN"
-      };
-      utterance.lang = map[langCode] || "en-IN";
-      let voices = speechSynthesis.getVoices();
-      let selected = voices.find(v => v.lang === utterance.lang);
-      if (selected) utterance.voice = selected;
-      speechSynthesis.speak(utterance);
+    function autoPlayAudio(sender, url) {
+      let chatBox = document.getElementById("chatHistory");
+      let p = document.createElement("p");
+      p.innerHTML = `<b>${sender}:</b> 🎤 speaking...`;
+      chatBox.appendChild(p);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      let audio = new Audio(url);
+      audio.play();
     }
 
-    // ===== SHOW MEMBERS =====
-    function toggleMembers() {
-      let listDiv = document.getElementById("membersList");
-      if (listDiv.style.display === "none") {
-        db.ref("rooms/" + roomId + "/members").once("value", snapshot => {
-          let members = Object.keys(snapshot.val() || {});
-          listDiv.innerHTML = "<b>Members:</b><br>" + members.join("<br>");
-          listDiv.style.display = "block";
-        });
-      } else {
-        listDiv.style.display = "none";
+    // ===== AUTO CLEANUP ON TAB CLOSE =====
+    window.addEventListener("beforeunload", function() {
+      if (roomId && userName) {
+        db.ref("rooms/" + roomId + "/members/" + userName).remove();
       }
-    }
+    });
   </script>
 </body>
 </html>
