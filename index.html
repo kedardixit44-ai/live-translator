@@ -5,59 +5,59 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live Translator by KD</title>
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: "Segoe UI", sans-serif;
       background: linear-gradient(135deg, #667eea, #764ba2);
       color: #fff;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      height: 100vh; display: flex; justify-content: center; align-items: center;
       padding: 15px;
     }
     .container {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255,255,255,0.12);
       backdrop-filter: blur(15px);
       border-radius: 25px;
       padding: 25px;
-      width: 100%;
-      max-width: 450px;
+      width: 100%; max-width: 450px;
       text-align: center;
       box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+      animation: fadeIn 0.8s ease-in-out;
     }
-    h2 { margin-bottom: 10px; }
+    h2 { margin-bottom: 8px; font-size: 22px; font-weight: bold; }
+    p { font-size: 14px; margin-bottom: 18px; color: #ddd; }
     input, select {
-      padding: 10px;
-      border-radius: 12px;
-      border: none;
-      outline: none;
-      margin: 8px 0;
-      width: 100%;
+      padding: 12px; border-radius: 15px; border: none; outline: none;
+      margin: 10px 0; font-size: 16px; width: 100%; background: #fff; color: #333;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
     button {
       background: linear-gradient(90deg, #ff7eb3, #ff758c);
-      border: none;
-      padding: 12px;
-      border-radius: 20px;
-      color: white;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-      width: 100%;
+      border: none; padding: 14px; border-radius: 25px; color: white;
+      font-size: 16px; font-weight: bold; cursor: pointer;
+      transition: 0.3s; margin-top: 10px; width: 100%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
+    button:hover { background: linear-gradient(90deg, #ff4d8c, #ff0066); transform: scale(1.05); }
     #output {
-      margin-top: 12px;
-      font-size: 16px;
-      font-weight: 500;
-      background: rgba(0,0,0,0.25);
-      padding: 12px;
-      border-radius: 15px;
-      min-height: 50px;
-      text-align: left;
-      overflow-y: auto;
-      max-height: 200px;
+      margin-top: 15px; font-size: 18px; font-weight: 500; color: #fff;
+      background: rgba(0,0,0,0.25); padding: 14px; border-radius: 15px;
+      min-height: 55px;
     }
+    #chatHistory {
+      margin-top: 15px; max-height: 200px; overflow-y: auto;
+      background: rgba(0,0,0,0.25); border-radius: 12px;
+      padding: 10px; text-align: left; font-size: 14px;
+    }
+    #chatHistory p { margin: 5px 0; padding: 6px 10px; border-radius: 8px; }
+    #chatHistory .me { background: rgba(0,255,128,0.2); }
+    #chatHistory .other { background: rgba(255,255,255,0.15); }
+    #chatHistory strong { color: gold; }
+    #chatHistory .system {
+      color: #ffd700; font-style: italic; text-align: center;
+      background: transparent; padding: 4px;
+    }
+    .footer { margin-top: 15px; font-size: 12px; color: #ccc; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
   </style>
 </head>
 <body>
@@ -65,8 +65,11 @@
     <h2>🎧 Live Translator</h2>
     <p>Developed by <b>KD</b> (@kdr.dxt_02)</p>
 
-    <input type="text" id="username" placeholder="Enter your name" />
-    <input type="text" id="room" placeholder="Enter room code" />
+    <input type="text" id="nameInput" placeholder="Enter your name">
+    <input type="text" id="roomInput" placeholder="Enter room code">
+
+    <button id="joinBtn" onclick="joinRoom()">Join Room</button>
+    <button id="leaveBtn" onclick="leaveRoom()" style="display:none;">Leave Room</button>
 
     <label for="lang">Choose your language:</label>
     <select id="lang">
@@ -85,17 +88,18 @@
       <option value="as">Assamese</option>
     </select>
 
-    <button onclick="joinRoom()">✅ Join Room</button>
-    <button id="leaveBtn" onclick="leaveRoom()" style="display:none;">🚪 Leave Room</button>
-    <button id="speakBtn" onclick="startRec()" style="display:none;">🎤 Speak</button>
+    <button onclick="startRec()">🎤 Speak</button>
+    <button onclick="toggleMembers()">👥 Peoples</button>
 
-    <div id="output"></div>
+    <p id="output"></p>
+    <div id="chatHistory"></div>
+    <div id="membersList" style="display:none; margin-top:10px; font-size:14px;"></div>
+
+    <div class="footer">✨ Powered by LibreTranslate & Firebase ✨</div>
   </div>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
   <script>
     // ===== FIREBASE CONFIG =====
     const firebaseConfig = {
@@ -112,80 +116,119 @@
 
     let userName = "";
     let roomId = "";
-    let targetLang = "en";
 
     // ===== JOIN ROOM =====
     function joinRoom() {
-      userName = document.getElementById("username").value.trim();
-      roomId = document.getElementById("room").value.trim();
-      targetLang = document.getElementById("lang").value;
+      userName = document.getElementById("nameInput").value.trim();
+      roomId = document.getElementById("roomInput").value.trim();
+      if (!userName || !roomId) { alert("Enter name and room code!"); return; }
 
-      if (!userName || !roomId) {
-        alert("Enter your name and room code!");
-        return;
-      }
+      db.ref("rooms/" + roomId + "/members/" + userName).set(true);
 
-      document.getElementById("speakBtn").style.display = "block";
+      // Push system message
+      db.ref("rooms/" + roomId + "/messages").push({
+        sender: "SYSTEM",
+        text: `⚡ ${userName} joined the room`,
+        timestamp: Date.now()
+      });
+
+      document.getElementById("joinBtn").style.display = "none";
       document.getElementById("leaveBtn").style.display = "block";
 
-      listenRoom();
+      // Listen to messages
+      db.ref("rooms/" + roomId + "/messages").on("child_added", snapshot => {
+        const msg = snapshot.val();
+        if (msg.sender === "SYSTEM") {
+          addSystemMessage(msg.text);
+        } else if (msg.sender !== userName) {
+          translateAndSpeak(msg.text, msg.sender);
+        } else {
+          addToChat(msg.sender + " (You)", msg.text, true);
+        }
+      });
     }
 
     // ===== LEAVE ROOM =====
     function leaveRoom() {
-      roomId = "";
-      document.getElementById("speakBtn").style.display = "none";
-      document.getElementById("leaveBtn").style.display = "none";
-      document.getElementById("output").innerHTML += "<p><i>You left the room.</i></p>";
-    }
+      if (roomId && userName) {
+        db.ref("rooms/" + roomId + "/messages").push({
+          sender: "SYSTEM",
+          text: `⚡ ${userName} left the room`,
+          timestamp: Date.now()
+        });
+        db.ref("rooms/" + roomId + "/members/" + userName).remove();
+      }
 
-    // ===== LISTEN TO ROOM =====
-    function listenRoom() {
-      db.ref("rooms/" + roomId + "/messages").on("child_added", snap => {
-        let msg = snap.val();
-        document.getElementById("output").innerHTML += `<p><b>${msg.name}:</b> ${msg.translated}</p>`;
-        speak(msg.translated, msg.lang);
-      });
+      document.getElementById("joinBtn").style.display = "block";
+      document.getElementById("leaveBtn").style.display = "none";
+      document.getElementById("chatHistory").innerHTML = "";
+      document.getElementById("membersList").style.display = "none";
+
+      db.ref("rooms/" + roomId + "/messages").off();
+      userName = ""; roomId = "";
     }
 
     // ===== SPEECH RECOGNITION =====
     function startRec() {
       let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = "en-IN"; // input language for speaking
+      recognition.lang = "en-IN";
       recognition.start();
 
       recognition.onresult = function(event) {
         let text = event.results[0][0].transcript;
-        translateAndSend(text);
+        document.getElementById("output").innerText = "You said: " + text;
+        sendMessage(text);
       };
     }
 
-    // ===== TRANSLATE & SEND =====
-    function translateAndSend(text) {
+    // ===== SEND MESSAGE =====
+    function sendMessage(text) {
+      if (!roomId) { alert("Join a room first!"); return; }
+      db.ref("rooms/" + roomId + "/messages").push({
+        sender: userName,
+        text: text,
+        timestamp: Date.now()
+      });
+    }
+
+    // ===== TRANSLATE & SPEAK =====
+    function translateAndSpeak(originalText, sender) {
+      let targetLang = document.getElementById("lang").value;
       fetch("https://libretranslate.de/translate", {
         method: "POST",
-        body: JSON.stringify({
-          q: text,
-          source: "auto",
-          target: targetLang,
-          format: "text"
-        }),
+        body: JSON.stringify({ q: originalText, source: "auto", target: targetLang, format: "text" }),
         headers: { "Content-Type": "application/json" }
       })
       .then(res => res.json())
       .then(data => {
-        let translatedText = data.translatedText;
-        db.ref("rooms/" + roomId + "/messages").push({
-          name: userName,
-          text: text,
-          translated: translatedText,
-          lang: targetLang,
-          timestamp: Date.now()
-        });
+        let translated = data.translatedText;
+        document.getElementById("output").innerText =
+          sender + ": " + translated;
+        speak(translated, targetLang);
+        addToChat(sender, translated, false);
       });
     }
 
-    // ===== SPEAK OUT =====
+    // ===== CHAT HISTORY =====
+    function addToChat(sender, message, isMe) {
+      let chatBox = document.getElementById("chatHistory");
+      let p = document.createElement("p");
+      p.className = isMe ? "me" : "other";
+      p.innerHTML = `<strong>${sender}:</strong> ${message}`;
+      chatBox.appendChild(p);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function addSystemMessage(text) {
+      let chatBox = document.getElementById("chatHistory");
+      let p = document.createElement("p");
+      p.className = "system";
+      p.innerText = text;
+      chatBox.appendChild(p);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // ===== SPEAK TRANSLATION =====
     function speak(text, langCode) {
       let utterance = new SpeechSynthesisUtterance(text);
       let map = {
@@ -198,6 +241,20 @@
       let selected = voices.find(v => v.lang === utterance.lang);
       if (selected) utterance.voice = selected;
       speechSynthesis.speak(utterance);
+    }
+
+    // ===== SHOW MEMBERS =====
+    function toggleMembers() {
+      let listDiv = document.getElementById("membersList");
+      if (listDiv.style.display === "none") {
+        db.ref("rooms/" + roomId + "/members").once("value", snapshot => {
+          let members = Object.keys(snapshot.val() || {});
+          listDiv.innerHTML = "<b>Members:</b><br>" + members.join("<br>");
+          listDiv.style.display = "block";
+        });
+      } else {
+        listDiv.style.display = "none";
+      }
     }
   </script>
 </body>
